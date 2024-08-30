@@ -47,11 +47,11 @@ namespace mcech::async_io
     {
         wait();
         fd_ = -1;
-    #ifdef _WIN32
+#ifdef _WIN32
         delete static_cast<OVERLAPPED*>(job_); job_ = nullptr;
-    #else
+#else
         delete static_cast<aiocb64*>(job_); job_ = nullptr;
-    #endif
+#endif
         if (result_ == 0)
         {
             throw std::ios_base::failure(__func__, std::make_error_code(static_cast<std::errc>(error_)));
@@ -74,7 +74,7 @@ namespace mcech::async_io
             throw std::future_error(std::future_errc::no_state);
         }
 
-    #ifdef _WIN32
+#ifdef _WIN32
         DWORD number_of_bytes_transferred;
         if (GetOverlappedResult((HANDLE)fd_, static_cast<OVERLAPPED*>(job_), &number_of_bytes_transferred, TRUE) == FALSE)
         {
@@ -84,7 +84,7 @@ namespace mcech::async_io
         {
             result_ = number_of_bytes_transferred;
         }
-    #else
+#else
         aiocb64* aiocbs[] = {static_cast<aiocb64*>(job_)};
         if (aio_suspend64(aiocbs, 1, nullptr) != 0)
         {
@@ -95,7 +95,7 @@ namespace mcech::async_io
             ssize_t number_of_bytes_transferred = aio_return64(static_cast<aiocb64*>(job_));
             result_ = number_of_bytes_transferred;
         }
-    #endif
+#endif
     }
 
     std::future_status Future::wait_for(const std::chrono::milliseconds& rel_time) const
@@ -105,7 +105,7 @@ namespace mcech::async_io
             throw std::future_error(std::future_errc::no_state);
         }
 
-    #ifdef _WIN32
+#ifdef _WIN32
         DWORD number_of_bytes_transferred;
         DWORD timeout = static_cast<DWORD>(rel_time.count() < (std::numeric_limits<DWORD>::max)() ? rel_time.count() : (std::numeric_limits<DWORD>::max)());
         if (GetOverlappedResultEx((HANDLE)fd_, static_cast<OVERLAPPED*>(job_), &number_of_bytes_transferred, timeout, FALSE) == FALSE)
@@ -125,7 +125,7 @@ namespace mcech::async_io
             result_ = number_of_bytes_transferred;
             return std::future_status::ready;
         }
-    #else
+#else
         aiocb64* aiocbs[] = {static_cast<aiocb64*>(job_)};
         timespec timeout;
         timeout.tv_sec = rel_time.count() / 1000;
@@ -148,7 +148,7 @@ namespace mcech::async_io
             result_ = number_of_bytes_transferred;
             return std::future_status::ready;
         }
-    #endif
+#endif
     }
 
     std::future_status Future::wait_until(const std::chrono::system_clock::time_point& abs_time) const

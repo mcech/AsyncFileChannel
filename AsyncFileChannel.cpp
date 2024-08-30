@@ -58,7 +58,7 @@ namespace mcech::async_io
             close();
         }
 
-    #ifdef _WIN32
+#ifdef _WIN32
         DWORD desired_access = FILE_GENERIC_READ;
         if (opt & OpenOption::WRITE)
         {
@@ -70,10 +70,10 @@ namespace mcech::async_io
         }
 
         DWORD creation_disposition;
-    #pragma push_macro("CREATE_NEW")
-    #undef CREATE_NEW
+#pragma push_macro("CREATE_NEW")
+#undef CREATE_NEW
         if (opt & OpenOption::CREATE_NEW)
-    #pragma pop_macro("CREATE_NEW")
+#pragma pop_macro("CREATE_NEW")
         {
             creation_disposition = CREATE_NEW;
         }
@@ -116,7 +116,7 @@ namespace mcech::async_io
             DWORD err = GetLastError();
             throw std::ios_base::failure(__func__, std::make_error_code(static_cast<std::errc>(err)));
         }
-    #else
+#else
         int flags = O_RDONLY;
         if (opt & OpenOption::WRITE)
         {
@@ -167,7 +167,7 @@ namespace mcech::async_io
             int err = errno;
             throw std::ios_base::failure(__func__, std::make_error_code(static_cast<std::errc>(err)));
         }
-    #endif
+#endif
     }
 
     bool AsyncFileChannel::is_open() const noexcept
@@ -177,7 +177,7 @@ namespace mcech::async_io
 
     uint64_t AsyncFileChannel::size() const
     {
-    #ifdef _WIN32
+#ifdef _WIN32
         FILE_STANDARD_INFO file_info = {};
         if (GetFileInformationByHandleEx((HANDLE)fd_, FileStandardInfo, &file_info, sizeof(file_info)) == FALSE)
         {
@@ -185,7 +185,7 @@ namespace mcech::async_io
             throw std::ios_base::failure(__func__, std::make_error_code(static_cast<std::errc>(err)));
         }
         return file_info.EndOfFile.QuadPart;
-    #else
+#else
         struct stat64 stat = {};
         if (fstat64(fd_, &stat) == -1)
         {
@@ -193,30 +193,30 @@ namespace mcech::async_io
             throw std::ios_base::failure(__func__, std::make_error_code(static_cast<std::errc>(err)));
         }
         return stat.st_size;
-    #endif
+#endif
     }
 
     void AsyncFileChannel::resize(uint64_t len)
     {
-    #ifdef _WIN32
+#ifdef _WIN32
         FILE_END_OF_FILE_INFO eof_info; eof_info.EndOfFile.QuadPart = len;
         if (SetFileInformationByHandle((HANDLE)fd_, FileEndOfFileInfo, &eof_info, sizeof(eof_info)) == FALSE)
         {
             DWORD err = GetLastError();
             throw std::ios_base::failure(__func__, std::make_error_code(static_cast<std::errc>(err)));
         }
-    #else
+#else
         if (posix_fallocate64(fd_, 0, len) != 0)
         {
             int err = errno;
             throw std::ios_base::failure(__func__, std::make_error_code(static_cast<std::errc>(err)));
         }
-    #endif
+#endif
     }
 
     size_t AsyncFileChannel::block_size() const
     {
-    #ifdef _WIN32
+#ifdef _WIN32
         FILE_STORAGE_INFO  file_storage_info = {};
         if (GetFileInformationByHandleEx((HANDLE)fd_, FileStorageInfo,  &file_storage_info,  sizeof(file_storage_info))  == FALSE)
         {
@@ -224,7 +224,7 @@ namespace mcech::async_io
             throw std::ios_base::failure(__func__, std::make_error_code(static_cast<std::errc>(err)));
         }
         return file_storage_info.PhysicalBytesPerSectorForPerformance;
-    #else
+#else
         struct stat64 stat = {};
         if (fstat64(fd_, &stat) == -1)
         {
@@ -232,19 +232,19 @@ namespace mcech::async_io
             throw std::ios_base::failure(__func__, std::make_error_code(static_cast<std::errc>(err)));
         }
         return stat.st_blksize;
-    #endif
+#endif
     }
 
     Future AsyncFileChannel::read(uint64_t off, void* buf, size_t len)
     {
-    #ifdef _WIN32
+#ifdef _WIN32
         OVERLAPPED* overlapped = new OVERLAPPED{};
         overlapped->OffsetHigh = off >> 32;
         overlapped->Offset = static_cast<DWORD>(off);
         DWORD dummy;
         ReadFile((HANDLE)fd_, buf, static_cast<DWORD>(len), &dummy, overlapped);
         return Future(fd_, overlapped);
-    #else
+#else
         aiocb64* aiocb = new aiocb64{};
         aiocb->aio_fildes = fd_;
         aiocb->aio_offset = off;
@@ -253,19 +253,19 @@ namespace mcech::async_io
         aiocb->aio_sigevent.sigev_notify = SIGEV_NONE;
         aio_read64(aiocb);
         return Future(fd_, aiocb);
-    #endif
+#endif
     }
 
     Future AsyncFileChannel::write(uint64_t off, const void* buf, size_t len)
     {
-    #ifdef _WIN32
+#ifdef _WIN32
         OVERLAPPED* overlapped = new OVERLAPPED{};
         overlapped->OffsetHigh = off >> 32;
         overlapped->Offset = static_cast<DWORD>(off);
         DWORD dummy;
         WriteFile((HANDLE)fd_, buf, static_cast<DWORD>(len), &dummy, overlapped);
         return Future(fd_, overlapped);
-    #else
+#else
         aiocb64* aiocb = new aiocb64{};
         aiocb->aio_fildes = fd_;
         aiocb->aio_offset = off;
@@ -274,14 +274,14 @@ namespace mcech::async_io
         aiocb->aio_sigevent.sigev_notify = SIGEV_NONE;
         aio_write64(aiocb);
         return Future(fd_, aiocb);
-    #endif
+#endif
     }
 
     void AsyncFileChannel::sync([[maybe_unused]] bool meta)
     {
-    #ifdef _WIN32
+#ifdef _WIN32
         FlushFileBuffers((HANDLE)fd_);
-    #else
+#else
         if (meta)
         {
             fsync(fd_);
@@ -290,17 +290,17 @@ namespace mcech::async_io
         {
             fdatasync(fd_);
         }
-    #endif
+#endif
     }
 
     void AsyncFileChannel::close() noexcept
     {
         sync(true);
-    #ifdef _WIN32
+#ifdef _WIN32
         CloseHandle((HANDLE)fd_);
-    #else
+#else
         ::close(fd_);
-    #endif
+#endif
         fd_ = -1;
     }
 }
