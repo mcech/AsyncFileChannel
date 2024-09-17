@@ -15,11 +15,6 @@
 
 namespace mcech::async_io
 {
-    constexpr uint8_t operator&(OpenOption lhs, OpenOption rhs)
-    {
-        return static_cast<int>(lhs) & static_cast<int>(rhs);
-    }
-
     AsyncFileChannel::AsyncFileChannel(const std::string& path, OpenOption opt)
     {
         open(path, opt);
@@ -72,20 +67,20 @@ namespace mcech::async_io
         DWORD creation_disposition;
 #pragma push_macro("CREATE_NEW")
 #undef CREATE_NEW
-        if (opt & OpenOption::CREATE_NEW)
+        if (static_cast<uint8_t>(opt & OpenOption::CREATE_NEW))
 #pragma pop_macro("CREATE_NEW")
         {
             creation_disposition = CREATE_NEW;
         }
-        else if ((opt & OpenOption::CREATE) && (opt & OpenOption::TRUNCATE) && (opt & OpenOption::WRITE))
+        else if (static_cast<uint8_t>(opt & OpenOption::CREATE & OpenOption::TRUNCATE & OpenOption::WRITE))
         {
             creation_disposition = CREATE_ALWAYS;
         }
-        else if (opt & OpenOption::CREATE)
+        else if (static_cast<uint8_t>(opt & OpenOption::CREATE))
         {
             creation_disposition = OPEN_ALWAYS;
         }
-        else if ((opt & OpenOption::TRUNCATE) && (opt & OpenOption::WRITE))
+        else if (static_cast<uint8_t>(opt & OpenOption::TRUNCATE & OpenOption::WRITE))
         {
             creation_disposition = TRUNCATE_EXISTING;
         }
@@ -95,11 +90,11 @@ namespace mcech::async_io
         }
 
         DWORD flags = FILE_FLAG_OVERLAPPED;
-        if ((opt & OpenOption::SYNC) || (opt & OpenOption::DSYNC))
+        if (static_cast<uint8_t>(opt & (OpenOption::SYNC | OpenOption::DSYNC)))
         {
             flags |= FILE_FLAG_WRITE_THROUGH;
         }
-        if (opt & OpenOption::DIRECT)
+        if (static_cast<uint8_t>(opt & OpenOption::DIRECT))
         {
             flags |= FILE_FLAG_NO_BUFFERING;
         }
@@ -118,45 +113,45 @@ namespace mcech::async_io
         }
 #else
         int flags = O_RDONLY;
-        if (opt & OpenOption::WRITE)
+        if (static_cast<uint8_t>(opt & OpenOption::WRITE))
         {
             flags = O_RDWR;
-            if (opt & OpenOption::APPEND)
+            if (static_cast<uint8_t>(opt & OpenOption::APPEND))
             {
                 flags |= O_APPEND;
             }
         }
 
-        if (opt & OpenOption::CREATE_NEW)
+        if (static_cast<uint8_t>(opt & OpenOption::CREATE_NEW))
         {
             flags |= (O_CREAT | O_EXCL);
         }
-        else if ((opt & OpenOption::CREATE) && (opt & OpenOption::TRUNCATE) && (opt & OpenOption::WRITE))
+        else if (static_cast<uint8_t>(opt & OpenOption::CREATE & OpenOption::TRUNCATE & OpenOption::WRITE))
         {
             flags |= (O_CREAT | O_TRUNC);
         }
-        else if (opt & OpenOption::CREATE)
+        else if (static_cast<uint8_t>(opt & OpenOption::CREATE))
         {
             flags |= O_CREAT;
         }
-        else if ((opt & OpenOption::TRUNCATE) && (opt & OpenOption::WRITE))
+        else if (static_cast<uint8_t>(opt & OpenOption::TRUNCATE & OpenOption::WRITE))
         {
             flags |= O_TRUNC;
         }
         else
         {
-            ;  // do nothing
+            // do nothing
         }
 
-        if (opt & OpenOption::SYNC)
+        if (static_cast<uint8_t>(opt & OpenOption::SYNC))
         {
             flags |= O_SYNC;
         }
-        else if (opt & OpenOption::DSYNC)
+        else if (static_cast<uint8_t>(opt & OpenOption::DSYNC))
         {
             flags |= O_DSYNC;
         }
-        if (opt & OpenOption::DIRECT)
+        if (static_cast<uint8_t>(opt & OpenOption::DIRECT))
         {
             flags |= O_DIRECT;
         }

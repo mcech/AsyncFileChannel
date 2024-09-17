@@ -17,8 +17,13 @@ namespace mcech::async_io
         DIRECT     = 0b10000000   // Direct I/O is used.
     };
 
+    constexpr OpenOption operator&(OpenOption lhs, OpenOption rhs)
+    {
+        return static_cast<OpenOption>(static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs));
+    }
+
     constexpr OpenOption operator|(OpenOption lhs, OpenOption rhs)
     {
-        return static_cast<OpenOption>(static_cast<int>(lhs) | static_cast<int>(rhs));
+        return static_cast<OpenOption>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
     }
 }
