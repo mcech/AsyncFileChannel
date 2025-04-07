@@ -13,10 +13,10 @@ namespace mcech::async_io
 {
     Future::Future(Future&& x) noexcept
     {
-        fd_ = std::exchange(x.fd_, -1);
-        job_ = std::exchange(x.job_, nullptr);
+        fd_     = std::exchange(x.fd_, -1);
+        job_    = std::exchange(x.job_, nullptr);
         result_ = std::exchange(x.result_, 0);
-        error_ = std::exchange(x.error_, 0);
+        error_  = std::exchange(x.error_, 0);
     }
 
     Future::~Future()
@@ -33,12 +33,17 @@ namespace mcech::async_io
         {
             if (valid())
             {
-                get();
+                try {
+                    get();
+                }
+                catch (...) {
+                    // ignore
+                }
             }
-            fd_ = std::exchange(x.fd_, -1);
-            job_ = std::exchange(x.job_, nullptr);
+            fd_     = std::exchange(x.fd_, -1);
+            job_    = std::exchange(x.job_, nullptr);
             result_ = std::exchange(x.result_, 0);
-            error_ = std::exchange(x.error_, 0);
+            error_  = std::exchange(x.error_, 0);
         }
         return *this;
     }

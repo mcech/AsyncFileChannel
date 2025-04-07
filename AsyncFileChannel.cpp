@@ -243,7 +243,7 @@ namespace mcech::async_io
         aiocb64* aiocb = new aiocb64{};
         aiocb->aio_fildes = fd_;
         aiocb->aio_offset = off;
-        aiocb->aio_buf = buf;
+        aiocb->aio_buf    = buf;
         aiocb->aio_nbytes = len;
         aiocb->aio_sigevent.sigev_notify = SIGEV_NONE;
         aio_read64(aiocb);
@@ -264,7 +264,7 @@ namespace mcech::async_io
         aiocb64* aiocb = new aiocb64{};
         aiocb->aio_fildes = fd_;
         aiocb->aio_offset = off;
-        aiocb->aio_buf = const_cast<void*>(buf);
+        aiocb->aio_buf    = const_cast<void*>(buf);
         aiocb->aio_nbytes = len;
         aiocb->aio_sigevent.sigev_notify = SIGEV_NONE;
         aio_write64(aiocb);

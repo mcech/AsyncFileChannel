@@ -29,8 +29,8 @@ namespace mcech::async_io
         Future(intptr_t fd, void* job);
 
         intptr_t fd_ = -1;
-        void* job_ = nullptr;
-        mutable size_t result_ = 0;
+        void* job_   = nullptr;
+        mutable size_t result_  = 0;
         mutable uint32_t error_ = 0;
     };
 }
